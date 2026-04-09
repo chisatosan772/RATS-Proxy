@@ -1,6 +1,6 @@
-import { c as createComponent } from './astro-component_B7obQc8D.mjs';
+import { c as createComponent } from './astro-component_M3GoQq0H.mjs';
 import 'piccolore';
-import { l as createRenderInstruction, m as maybeRenderHead, r as renderTemplate, n as renderSlot, o as renderComponent, p as renderHead, h as addAttribute } from './entrypoint_D2_mp3Xr.mjs';
+import { l as createRenderInstruction, m as maybeRenderHead, r as renderTemplate, n as renderSlot, o as renderComponent, p as renderHead, h as addAttribute } from './entrypoint_DFYYOnAv.mjs';
 import 'clsx';
 import { jsxs, jsx } from 'react/jsx-runtime';
 import { useState, useLayoutEffect, useEffect, useCallback } from 'react';

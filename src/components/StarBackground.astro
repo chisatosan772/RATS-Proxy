@@ -1,0 +1,15 @@
+---
+---
+
+<canvas
+  id="rats-starfield"
+  class="pointer-events-none fixed inset-0 z-0 h-full w-full"
+  aria-hidden="true"
+></canvas>
+
+<script>
+  import { initStarfield } from '../scripts/starfield';
+
+  const el = document.getElementById('rats-starfield') as HTMLCanvasElement | null;
+  initStarfield(el);
+</script>

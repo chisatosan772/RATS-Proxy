@@ -1,0 +1,53 @@
+---
+---
+
+<label class="sr-only" for="rats-lang-select" id="rats-lang-label"></label>
+<select
+  id="rats-lang-select"
+  class="min-h-touch w-full max-w-[200px] cursor-pointer rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-2 text-sm font-medium text-fg shadow-inner backdrop-blur-md transition-all hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent md:max-w-none md:min-w-[160px]"
+  aria-labelledby="rats-lang-label"
+>
+  <option value="en"></option>
+  <option value="id"></option>
+</select>
+
+<script>
+  import { setStoredLocale, getStoredLocale, t, type Locale } from '../i18n';
+  import { applyDomI18n } from '../scripts/dom-i18n';
+
+  const select = document.getElementById('rats-lang-select') as HTMLSelectElement | null;
+  const labelEl = document.getElementById('rats-lang-label');
+
+  function fillOptions() {
+    const lang = getStoredLocale();
+    if (labelEl) {
+      labelEl.textContent = t(lang, 'nav.language');
+    }
+    const optEn = select?.querySelector<HTMLOptionElement>('option[value="en"]');
+    const optId = select?.querySelector<HTMLOptionElement>('option[value="id"]');
+    if (optEn) optEn.textContent = t(lang, 'language.en');
+    if (optId) optId.textContent = t(lang, 'language.id');
+  }
+
+  if (select) {
+    const initial = getStoredLocale();
+    select.value = initial;
+    fillOptions();
+    applyDomI18n(getStoredLocale());
+
+    select.addEventListener('change', () => {
+      const v = select.value as Locale;
+      if (v === 'en' || v === 'id') {
+        setStoredLocale(v);
+        document.documentElement.setAttribute('data-lang', v);
+        document.documentElement.lang = v === 'id' ? 'id' : 'en';
+        applyDomI18n(v);
+        fillOptions();
+        select.value = v;
+        window.dispatchEvent(new CustomEvent('langchange', { detail: { lang: v } }));
+      }
+    });
+
+    window.addEventListener('langchange', fillOptions);
+  }
+</script>

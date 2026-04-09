@@ -1,0 +1,101 @@
+{
+  "common": {
+    "appName": "RATS Proxy",
+    "retry": "Retry",
+    "close": "Close"
+  },
+  "nav": {
+    "theme": "Theme",
+    "language": "Language"
+  },
+  "theme": {
+    "galaxy": "Galaxy",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "language": {
+    "en": "English",
+    "id": "Indonesian"
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Admin and user access",
+    "email": "Email",
+    "password": "Password",
+    "button": "Sign in",
+    "loading": "Signing in…",
+    "error": {
+      "invalid": "Please enter a valid email and password.",
+      "credentials": "Invalid email or password.",
+      "blocked": "Too many failed attempts. Your IP is temporarily blocked.",
+      "blockedCountdown": "Try again in {{minutes}}m {{seconds}}s.",
+      "ratelimit": "Too many requests, please wait.",
+      "network": "Cannot connect to server."
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "You are signed in.",
+    "logout": "Sign out",
+    "roleAdmin": "Administrator",
+    "roleUser": "User",
+    "proxyAdmin": {
+      "title": "Proxy management",
+      "subtitle": "Create, edit, or remove Owl proxy entries tied to customer accounts.",
+      "totalProxies": "{{count}} proxies",
+      "sectionAdd": "New proxy",
+      "sectionList": "Your proxies",
+      "accountsLabel": "Account (email)",
+      "accountsPlaceholder": "user@example.com",
+      "add": "Add proxy",
+      "creating": "Creating…",
+      "loading": "Loading proxies…",
+      "empty": "No proxies yet. Add one above.",
+      "errorLoad": "Could not load the proxy list.",
+      "errorNetwork": "Cannot connect to server.",
+      "errorCreate": "Could not create proxy. Check the account value.",
+      "errorUpdate": "Could not update this proxy.",
+      "errorDelete": "Could not delete this proxy.",
+      "errorNotFound": "That proxy no longer exists. List refreshed.",
+      "copyId": "Copy ID",
+      "copied": "Copied",
+      "edit": "Edit",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this proxy permanently?",
+      "deleteYes": "Yes, delete",
+      "deleteNo": "Cancel",
+      "deleting": "Deleting…",
+      "colId": "ID",
+      "colAccounts": "Accounts",
+      "colCreated": "Created",
+      "colUpdated": "Updated"
+    }
+  },
+  "proxy": {
+    "title": "Proxy quota",
+    "remaining": "Remaining traffic",
+    "used": "Used traffic",
+    "create": "Create proxy",
+    "creating": "Creating…",
+    "selectCountry": "Select country",
+    "selectRegion": "Select region",
+    "regionsEmpty": "No regions are available for this proxy.",
+    "result": "Your proxy",
+    "copy": "Copy",
+    "copied": "Copied",
+    "loading": "Loading quota…",
+    "error": {
+      "invaliduuid": "This link does not contain a valid proxy ID.",
+      "notfound": "Proxy not found.",
+      "expired": "Session expired, proxy is inactive.",
+      "ratelimit": "Rate limited. Please try again later.",
+      "ratelimitRetry": "You can retry after {{seconds}} seconds.",
+      "network": "Cannot connect to server.",
+      "regionsFailed": "Could not load regions. Try again."
+    },
+    "supportInfo": "Supports SOCKS5, HTTP, and HTTPS protocols"
+  }
+}

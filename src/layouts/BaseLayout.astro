@@ -1,0 +1,57 @@
+---
+import '../styles/global.css';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import LanguageSwitcher from '../components/LanguageSwitcher.astro';
+
+interface Props {
+  title?: string;
+}
+
+const { title = 'RATS Proxy' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="theme-galaxy">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <script is:inline>
+      (function () {
+        try {
+          var th = localStorage.getItem('theme') || 'galaxy';
+          if (['galaxy', 'light', 'dark'].indexOf(th) === -1) th = 'galaxy';
+          document.documentElement.classList.remove('theme-galaxy', 'theme-light', 'theme-dark');
+          document.documentElement.classList.add('theme-' + th);
+          var lg = localStorage.getItem('lang') || 'en';
+          if (lg !== 'en' && lg !== 'id') lg = 'en';
+          document.documentElement.setAttribute('data-lang', lg);
+          document.documentElement.lang = lg === 'id' ? 'id' : 'en';
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <slot name="background" />
+    <div class="relative z-[1] flex min-h-screen flex-col">
+      <header
+        class="flex flex-wrap items-center justify-between gap-3 p-4 md:items-center md:justify-between md:px-8"
+      >
+        <div class="flex min-h-touch items-center">
+          <slot name="header-left" />
+        </div>
+        <div
+          class="flex w-full max-w-full flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center md:gap-4"
+        >
+          <ThemeToggle />
+          <LanguageSwitcher />
+        </div>
+      </header>
+      <main class="flex flex-1 flex-col px-4 pb-12 pt-2 md:px-8">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,130 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import StarBackground from '../../components/StarBackground.astro';
+import AdminProxyPanel from '../../components/AdminProxyPanel';
+---
+
+<BaseLayout title="RATS Proxy — Dashboard">
+  <StarBackground slot="background" />
+  <span
+    slot="header-left"
+    class="bg-gradient-to-r from-accent to-accent-2 bg-clip-text text-lg font-bold text-transparent md:text-xl"
+    data-i18n="common.appName"
+  ></span>
+  <div class="flex w-full flex-1 flex-col items-center gap-10 px-0 py-8 md:gap-12 md:py-12">
+    <div class="relative w-full max-w-4xl">
+      <div
+        class="absolute inset-0 -z-10 rounded-[2rem] bg-gradient-to-br from-accent/20 via-transparent to-accent-2/15 blur-2xl"
+        aria-hidden="true"
+      ></div>
+      <div
+        class="relative overflow-hidden rounded-[1.75rem] border border-glass-border bg-[var(--color-glass-bg)] p-[1px] shadow-glow"
+      >
+        <div
+          class="relative rounded-[1.7rem] bg-gradient-to-b from-[var(--color-input-bg)]/60 to-[var(--color-glass-bg)] px-6 py-10 backdrop-blur-xl md:px-12 md:py-12"
+        >
+          <div
+            class="pointer-events-none absolute -right-16 top-0 h-40 w-40 rounded-full bg-accent/20 blur-3xl"
+            aria-hidden="true"
+          ></div>
+          <div class="relative flex flex-col items-center text-center">
+            <div
+              class="mb-6 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl bg-gradient-to-br from-accent/50 to-accent-2/40 text-3xl text-white shadow-glow ring-2 ring-white/10"
+            >
+              ✦
+            </div>
+            <h1
+              class="text-3xl font-bold tracking-tight text-fg md:text-4xl"
+              data-i18n="dashboard.title"
+            >
+            </h1>
+            <p class="mt-2 max-w-md text-sm text-fg-muted md:text-base" data-i18n="dashboard.subtitle"></p>
+            <p id="rats-dash-user" class="mt-4 text-lg font-semibold text-fg md:text-xl"></p>
+            <span
+              id="rats-dash-role"
+              class="mt-3 hidden rounded-full border border-accent/35 bg-accent/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-accent"
+            ></span>
+            <button
+              type="button"
+              id="rats-dash-logout"
+              class="mt-8 min-h-touch w-full max-w-xs rounded-xl bg-gradient-to-r from-accent via-accent-2 to-accent px-8 py-3.5 font-semibold text-white shadow-glow transition-all duration-300 hover:scale-[1.02] hover:shadow-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <span data-i18n="dashboard.logout">Sign out</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <AdminProxyPanel client:load />
+  </div>
+  <script is:inline>
+    (function () {
+      var ROLE_ADMIN = 'Administrator';
+      var ROLE_USER = 'User';
+      function roleLabel(isAdmin, lang) {
+        if (lang === 'id') {
+          return isAdmin ? 'Administrator' : 'Pengguna';
+        }
+        return isAdmin ? ROLE_ADMIN : ROLE_USER;
+      }
+      try {
+        if (!localStorage.getItem('access_token')) {
+          window.location.replace('/gw/login');
+          return;
+        }
+        var lang = document.documentElement.getAttribute('data-lang') || 'en';
+        var raw = localStorage.getItem('user_profile');
+        if (raw) {
+          var u = JSON.parse(raw);
+          var label = (u.nama || u.email || u.id || '').trim();
+          var el = document.getElementById('rats-dash-user');
+          if (el && label) el.textContent = label;
+          var isAdmin = String(u.role || '')
+            .toLowerCase()
+            .trim() === 'admin';
+          var badge = document.getElementById('rats-dash-role');
+          if (badge) {
+            badge.textContent = roleLabel(isAdmin, lang);
+            badge.classList.remove('hidden');
+          }
+        }
+      } catch (e) {}
+
+      document.getElementById('rats-dash-logout')?.addEventListener('click', function () {
+        try {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user_profile');
+        } catch (e) {}
+        window.location.href = '/gw/login';
+      });
+
+      window.addEventListener('langchange', function () {
+        try {
+          var lang = document.documentElement.getAttribute('data-lang') || 'en';
+          var raw = localStorage.getItem('user_profile');
+          var badge = document.getElementById('rats-dash-role');
+          if (!raw || !badge) return;
+          var u = JSON.parse(raw);
+          var isAdmin = String(u.role || '')
+            .toLowerCase()
+            .trim() === 'admin';
+          badge.textContent = roleLabel(isAdmin, lang);
+        } catch (e) {}
+      });
+    })();
+  </script>
+  <script>
+    import { getStoredLocale } from '../../i18n';
+    import { applyDomI18n } from '../../scripts/dom-i18n';
+
+    function syncDashboardI18n() {
+      applyDomI18n(getStoredLocale());
+    }
+    syncDashboardI18n();
+    window.addEventListener('langchange', syncDashboardI18n);
+  </script>
+</BaseLayout>

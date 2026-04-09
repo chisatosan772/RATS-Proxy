@@ -1,0 +1,106 @@
+---
+---
+
+<div
+  class="rats-theme-group flex items-center gap-1 rounded-xl glass-panel p-1"
+  role="group"
+  aria-label=""
+>
+  <button
+    type="button"
+    class="rats-theme-btn min-h-touch min-w-touch rounded-lg px-2 text-lg transition-all hover:scale-105 hover:shadow-glow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+    data-theme="galaxy"
+    aria-pressed="false"
+    aria-label=""
+  >
+    ✦
+  </button>
+  <button
+    type="button"
+    class="rats-theme-btn min-h-touch min-w-touch rounded-lg px-2 text-lg transition-all hover:scale-105 hover:shadow-glow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+    data-theme="light"
+    aria-pressed="false"
+    aria-label=""
+  >
+    ☀
+  </button>
+  <button
+    type="button"
+    class="rats-theme-btn min-h-touch min-w-touch rounded-lg px-2 text-lg transition-all hover:scale-105 hover:shadow-glow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+    data-theme="dark"
+    aria-pressed="false"
+    aria-label=""
+  >
+    ☾
+  </button>
+</div>
+
+<script>
+  import { STORAGE_THEME } from '../lib/constants';
+  import { t, getStoredLocale } from '../i18n';
+  import { applyDomI18n } from '../scripts/dom-i18n';
+
+  const root = document.documentElement;
+  const group = document.querySelector<HTMLDivElement>('.rats-theme-group');
+  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('.rats-theme-btn'));
+
+  function refreshLabels() {
+    const lang = getStoredLocale();
+    if (group) {
+      group.setAttribute('aria-label', t(lang, 'nav.theme'));
+    }
+    const labels: Record<string, string> = {
+      galaxy: t(lang, 'theme.galaxy'),
+      light: t(lang, 'theme.light'),
+      dark: t(lang, 'theme.dark'),
+    };
+    for (const b of buttons) {
+      const key = b.dataset.theme;
+      if (key && labels[key]) {
+        b.setAttribute('aria-label', labels[key]);
+        b.setAttribute('title', labels[key]);
+      }
+    }
+    applyDomI18n(lang);
+  }
+
+  function applyTheme(name: string) {
+    root.classList.remove('theme-galaxy', 'theme-light', 'theme-dark');
+    root.classList.add(`theme-${name}`);
+    try {
+      localStorage.setItem(STORAGE_THEME, name);
+    } catch {
+      /* ignore */
+    }
+    for (const b of buttons) {
+      const on = b.dataset.theme === name;
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.classList.toggle('ring-2', on);
+      b.classList.toggle('ring-accent', on);
+    }
+  }
+
+  for (const b of buttons) {
+    b.addEventListener('click', () => {
+      const name = b.dataset.theme;
+      if (name === 'galaxy' || name === 'light' || name === 'dark') {
+        applyTheme(name);
+      }
+    });
+  }
+
+  let stored: string | null = null;
+  try {
+    stored = localStorage.getItem(STORAGE_THEME);
+  } catch {
+    stored = null;
+  }
+  if (stored === 'galaxy' || stored === 'light' || stored === 'dark') {
+    applyTheme(stored);
+  } else {
+    applyTheme('galaxy');
+  }
+
+  refreshLabels();
+  window.addEventListener('langchange', refreshLabels);
+</script>

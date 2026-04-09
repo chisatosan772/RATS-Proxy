@@ -1,0 +1,29 @@
+---
+export const prerender = true;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import StarBackground from '../../components/StarBackground.astro';
+import GlassCard from '../../components/GlassCard.astro';
+import LoginForm from '../../components/LoginForm';
+---
+
+<BaseLayout title="RATS Proxy — Login">
+  <StarBackground slot="background" />
+  <span
+    slot="header-left"
+    class="bg-gradient-to-r from-accent to-accent-2 bg-clip-text text-lg font-bold text-transparent md:text-xl"
+    data-i18n="common.appName"
+  ></span>
+  <div class="flex flex-1 items-center justify-center py-6 md:py-10">
+    <GlassCard class="w-full max-w-md">
+      <LoginForm client:load />
+    </GlassCard>
+  </div>
+  <script is:inline>
+    try {
+      if (document.referrer && document.referrer.indexOf(location.origin) === 0) {
+        sessionStorage.setItem('loginReturn', document.referrer);
+      }
+    } catch (e) {}
+  </script>
+</BaseLayout>

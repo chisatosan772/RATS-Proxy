@@ -1,0 +1,101 @@
+{
+  "common": {
+    "appName": "RATS Proxy",
+    "retry": "Coba lagi",
+    "close": "Tutup"
+  },
+  "nav": {
+    "theme": "Tema",
+    "language": "Bahasa"
+  },
+  "theme": {
+    "galaxy": "Galaksi",
+    "light": "Terang",
+    "dark": "Gelap"
+  },
+  "language": {
+    "en": "English",
+    "id": "Bahasa Indonesia"
+  },
+  "login": {
+    "title": "Masuk",
+    "subtitle": "Akses admin dan pengguna",
+    "email": "Email",
+    "password": "Kata sandi",
+    "button": "Masuk",
+    "loading": "Memproses…",
+    "error": {
+      "invalid": "Masukkan email dan kata sandi yang valid.",
+      "credentials": "Email atau kata sandi salah.",
+      "blocked": "Terlalu banyak percobaan gagal. IP Anda diblokir sementara.",
+      "blockedCountdown": "Coba lagi dalam {{minutes}}m {{seconds}}d.",
+      "ratelimit": "Terlalu banyak permintaan, harap tunggu.",
+      "network": "Tidak dapat terhubung ke server."
+    }
+  },
+  "dashboard": {
+    "title": "Dasbor",
+    "subtitle": "Anda sudah masuk.",
+    "logout": "Keluar",
+    "roleAdmin": "Administrator",
+    "roleUser": "Pengguna",
+    "proxyAdmin": {
+      "title": "Manajemen proxy",
+      "subtitle": "Buat, ubah, atau hapus entri proxy Owl yang terikat ke akun pelanggan.",
+      "totalProxies": "{{count}} proxy",
+      "sectionAdd": "Proxy baru",
+      "sectionList": "Daftar proxy",
+      "accountsLabel": "Akun (email)",
+      "accountsPlaceholder": "user@example.com",
+      "add": "Tambah proxy",
+      "creating": "Membuat…",
+      "loading": "Memuat daftar proxy…",
+      "empty": "Belum ada proxy. Tambahkan di atas.",
+      "errorLoad": "Gagal memuat daftar proxy.",
+      "errorNetwork": "Tidak dapat terhubung ke server.",
+      "errorCreate": "Gagal membuat proxy. Periksa nilai akun.",
+      "errorUpdate": "Gagal memperbarui proxy ini.",
+      "errorDelete": "Gagal menghapus proxy ini.",
+      "errorNotFound": "Proxy tidak ditemukan. Daftar diperbarui.",
+      "copyId": "Salin ID",
+      "copied": "Tersalin",
+      "edit": "Ubah",
+      "save": "Simpan",
+      "saving": "Menyimpan…",
+      "cancel": "Batal",
+      "delete": "Hapus",
+      "deleteConfirm": "Hapus proxy ini permanen?",
+      "deleteYes": "Ya, hapus",
+      "deleteNo": "Batal",
+      "deleting": "Menghapus…",
+      "colId": "ID",
+      "colAccounts": "Akun",
+      "colCreated": "Dibuat",
+      "colUpdated": "Diperbarui"
+    }
+  },
+  "proxy": {
+    "title": "Kuota proxy",
+    "remaining": "Sisa trafik",
+    "used": "Trafik terpakai",
+    "create": "Buat proxy",
+    "creating": "Membuat…",
+    "selectCountry": "Pilih negara",
+    "selectRegion": "Pilih wilayah",
+    "regionsEmpty": "Tidak ada wilayah untuk proxy ini.",
+    "result": "Proxy Anda",
+    "copy": "Salin",
+    "copied": "Tersalin",
+    "loading": "Memuat kuota…",
+    "error": {
+      "invaliduuid": "Tautan ini tidak berisi ID proxy yang valid.",
+      "notfound": "Proxy tidak ditemukan.",
+      "expired": "Sesi berakhir, proxy tidak aktif.",
+      "ratelimit": "Batas permintaan. Coba lagi nanti.",
+      "ratelimitRetry": "Anda bisa mencoba lagi setelah {{seconds}} detik.",
+      "network": "Tidak dapat terhubung ke server.",
+      "regionsFailed": "Gagal memuat wilayah. Coba lagi."
+    },
+    "supportInfo": "Mendukung protokol SOCKS5, HTTP, dan HTTPS"
+  }
+}

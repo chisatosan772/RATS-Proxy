@@ -17,6 +17,15 @@ export function saveTokens(access: string, refresh: string, user?: LoginUser): v
   }
 }
 
+export function updateTokens(access: string, refresh: string): void {
+  try {
+    localStorage.setItem(AUTH_ACCESS_KEY, access);
+    localStorage.setItem(AUTH_REFRESH_KEY, refresh);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function clearTokens(): void {
   try {
     localStorage.removeItem(AUTH_ACCESS_KEY);
@@ -24,6 +33,14 @@ export function clearTokens(): void {
     localStorage.removeItem(USER_PROFILE_KEY);
   } catch {
     /* ignore */
+  }
+}
+
+export function getRefreshToken(): string | null {
+  try {
+    return localStorage.getItem(AUTH_REFRESH_KEY);
+  } catch {
+    return null;
   }
 }
 

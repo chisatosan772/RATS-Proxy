@@ -1,4 +1,4 @@
-import { getAccessToken } from './auth';
+import { getAccessToken, getRefreshToken, updateTokens, clearTokens } from './auth';
 import { API_BASE_URL } from './constants';
 
 export type LoginUser = {
@@ -409,10 +409,85 @@ function adminAuthHeaders(): HeadersInit {
   };
 }
 
-export async function adminListProxies(): Promise<AdminProxyRow[]> {
+function adminBearerOnly(): HeadersInit {
+  const token = getAccessToken();
+  if (!token) {
+    throw new ApiError('expired', 'expired');
+  }
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function refreshTokenRequest(): Promise<boolean> {
+  const refresh_token = getRefreshToken();
+  if (!refresh_token) {
+    clearTokens();
+    return false;
+  }
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token }),
+    });
+    const body = await parseJsonSafe(res) as Record<string, unknown>;
+    
+    if (res.ok && body && typeof body.access_token === 'string' && typeof body.refresh_token === 'string') {
+      updateTokens(body.access_token, body.refresh_token);
+      return true;
+    }
+    
+    if (body && body.shouldClearSession) {
+      clearTokens();
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+async function fetchWithAdminAuth(url: string, options: RequestInit = {}): Promise<Response> {
+  const reqHeaders = options.headers || adminAuthHeaders();
+  let res = await fetch(url, { ...options, headers: reqHeaders });
+  
+  if (res.status === 401 || res.status === 403) {
+    const refreshed = await refreshTokenRequest();
+    if (refreshed) {
+      // Retry with new headers.
+      // Depending on whether it's bearer only or full json headers, we guess based on existing Content-Type
+      let newHeaders;
+      if (typeof reqHeaders === 'object' && !Array.isArray(reqHeaders) && 'Content-Type' in (reqHeaders as Record<string, string>)) {
+         newHeaders = adminAuthHeaders();
+      } else {
+         newHeaders = adminBearerOnly();
+      }
+      res = await fetch(url, { ...options, headers: newHeaders });
+    }
+  }
+  return res;
+}
+
+export type PaginationData = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
+export type AdminProxyListResult = {
+  data: AdminProxyRow[];
+  pagination: PaginationData;
+};
+
+export async function adminListProxies(page = 1, limit = 10, search = ''): Promise<AdminProxyListResult> {
+  let url = `${API_BASE_URL}/api/proxy?page=${encodeURIComponent(page)}&limit=${encodeURIComponent(limit)}`;
+  if (search) {
+    url += `&search=${encodeURIComponent(search)}`;
+  }
+
   let res: Response;
   try {
-    res = await fetch(`${API_BASE_URL}/api/proxy`, {
+    res = await fetchWithAdminAuth(url, {
+      method: 'GET',
       headers: adminAuthHeaders(),
     });
   } catch {
@@ -422,9 +497,12 @@ export async function adminListProxies(): Promise<AdminProxyRow[]> {
   const body = await parseJsonSafe(res);
 
   if (res.ok && body && typeof body === 'object') {
-    const data = (body as Record<string, unknown>).data;
+    const o = body as Record<string, unknown>;
+    const data = o.data;
+    const pagination = o.pagination as PaginationData | undefined;
+
     if (Array.isArray(data)) {
-      return data
+      const parsedData = data
         .filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object')
         .map((row) => ({
           id: String(row.id ?? ''),
@@ -435,6 +513,11 @@ export async function adminListProxies(): Promise<AdminProxyRow[]> {
           updated_at: typeof row.updated_at === 'string' ? row.updated_at : undefined,
         }))
         .filter((r) => r.id.length > 0);
+        
+      return {
+        data: parsedData,
+        pagination: pagination || { page, limit, total: parsedData.length, totalPages: 1 }
+      };
     }
   }
 
@@ -451,7 +534,7 @@ export async function adminListProxies(): Promise<AdminProxyRow[]> {
 export async function adminCreateProxy(accounts: string): Promise<void> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE_URL}/api/proxy`, {
+    res = await fetchWithAdminAuth(`${API_BASE_URL}/api/proxy`, {
       method: 'POST',
       headers: adminAuthHeaders(),
       body: JSON.stringify({ accounts: accounts.trim() }),
@@ -477,19 +560,49 @@ export async function adminCreateProxy(accounts: string): Promise<void> {
   throw new ApiError('unknown', 'unknown');
 }
 
-function adminBearerOnly(): HeadersInit {
-  const token = getAccessToken();
-  if (!token) {
+export type BulkAdminProxyResult = {
+  success: number;
+  failed: number;
+  message: string;
+  results: { email: string; success: boolean; id?: string; error?: string }[];
+};
+
+export async function adminBulkCreateProxy(emails: string[]): Promise<BulkAdminProxyResult> {
+  let res: Response;
+  try {
+    res = await fetchWithAdminAuth(`${API_BASE_URL}/api/proxy/bulk`, {
+      method: 'POST',
+      headers: adminAuthHeaders(),
+      body: JSON.stringify({ emails }),
+    });
+  } catch {
+    throw new ApiError('network', 'network');
+  }
+
+  const body = await parseJsonSafe(res);
+
+  if (res.ok && body && typeof body === 'object') {
+    return body as BulkAdminProxyResult;
+  }
+
+  if (res.status === 401 || res.status === 403) {
     throw new ApiError('expired', 'expired');
   }
-  return { Authorization: `Bearer ${token}` };
+  if (res.status === 429) {
+    throw new ApiError('rate_limit', 'rate_limit', undefined, readRetryAfter(res, body));
+  }
+  if (res.status === 400) {
+    throw new ApiError('bad_request', 'bad_request');
+  }
+
+  throw new ApiError('unknown', 'unknown');
 }
 
 export async function adminUpdateProxy(id: string, accounts: string): Promise<void> {
   const encoded = encodeURIComponent(id);
   let res: Response;
   try {
-    res = await fetch(`${API_BASE_URL}/api/proxy/${encoded}`, {
+    res = await fetchWithAdminAuth(`${API_BASE_URL}/api/proxy/${encoded}`, {
       method: 'PUT',
       headers: adminAuthHeaders(),
       body: JSON.stringify({ accounts: accounts.trim() }),
@@ -518,7 +631,7 @@ export async function adminDeleteProxy(id: string): Promise<void> {
   const encoded = encodeURIComponent(id);
   let res: Response;
   try {
-    res = await fetch(`${API_BASE_URL}/api/proxy/${encoded}`, {
+    res = await fetchWithAdminAuth(`${API_BASE_URL}/api/proxy/${encoded}`, {
       method: 'DELETE',
       headers: adminBearerOnly(),
     });

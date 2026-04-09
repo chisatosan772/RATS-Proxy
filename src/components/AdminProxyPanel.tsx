@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import {
   adminCreateProxy,
+  adminBulkCreateProxy,
   adminDeleteProxy,
   adminListProxies,
   adminUpdateProxy,
@@ -38,9 +39,19 @@ export default function AdminProxyPanel() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [rows, setRows] = useState<AdminProxyRow[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const [search, setSearch] = useState('');
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  const [isBulkMode, setIsBulkMode] = useState(false);
+
   const [accounts, setAccounts] = useState('');
   const [creating, setCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -62,12 +73,15 @@ export default function AdminProxyPanel() {
     return () => window.removeEventListener('langchange', onLang);
   }, []);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (cPage = page, cSearch = search) => {
     setLoading(true);
     setErrorMsg(null);
+    setSuccessMsg(null);
     try {
-      const list = await adminListProxies();
-      setRows(list);
+      const result = await adminListProxies(cPage, limit, cSearch);
+      setRows(result.data);
+      setTotalPages(result.pagination.totalPages);
+      setTotalItems(result.pagination.total);
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.kind === 'expired') {
@@ -87,11 +101,11 @@ export default function AdminProxyPanel() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, search]);
 
   useEffect(() => {
-    if (isAdmin) void load();
-  }, [isAdmin, load]);
+    if (isAdmin) void load(page, search);
+  }, [isAdmin, load, page]);
 
   const handleApiError = (err: unknown, msgKey: string) => {
     if (err instanceof ApiError) {
@@ -105,7 +119,7 @@ export default function AdminProxyPanel() {
       }
       if (err.kind === 'not_found') {
         setErrorMsg(t(locale, 'dashboard.proxyAdmin.errorNotFound'));
-        void load();
+        void load(page, search);
         return;
       }
     }
@@ -117,10 +131,27 @@ export default function AdminProxyPanel() {
     if (!accounts.trim()) return;
     setCreating(true);
     setErrorMsg(null);
+    setSuccessMsg(null);
     try {
-      await adminCreateProxy(accounts.trim());
+      if (isBulkMode) {
+        const emails = accounts.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
+        if (!emails.length) {
+          setCreating(false);
+          return;
+        }
+        const res = await adminBulkCreateProxy(emails);
+        if (res.failed > 0) {
+          setErrorMsg(`Bulk create finished. ${res.success} success, ${res.failed} failed.`);
+        } else {
+          setSuccessMsg(`Successfully created ${res.success} proxies.`);
+        }
+      } else {
+        await adminCreateProxy(accounts.trim());
+        setSuccessMsg(t(locale, 'dashboard.proxyAdmin.successCreate') ?? 'Proxy created successfully.');
+      }
       setAccounts('');
-      await load();
+      setPage(1);
+      await load(1, search);
     } catch (err) {
       handleApiError(err, 'dashboard.proxyAdmin.errorCreate');
     } finally {
@@ -212,30 +243,74 @@ export default function AdminProxyPanel() {
           </p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-accent md:text-sm">
-              {t(locale, 'dashboard.proxyAdmin.totalProxies', { count: rows.length })}
+              {t(locale, 'dashboard.proxyAdmin.totalProxies', { count: totalItems })}
             </span>
           </div>
         </header>
 
-        <div className="relative mt-10 rounded-2xl border border-glass-border/80 bg-[var(--color-input-bg)]/35 p-5 md:p-6">
-          <h3 className="mb-4 text-left text-sm font-semibold uppercase tracking-wider text-fg-muted">
-            {t(locale, 'dashboard.proxyAdmin.sectionAdd')}
-          </h3>
-          <form className="flex flex-col gap-4 sm:flex-row sm:items-end" onSubmit={onCreate}>
+        {/* Search Bar */}
+        <div className="relative mt-8 mb-6">
+          <form onSubmit={(e) => { e.preventDefault(); setPage(1); void load(1, search); }} className="flex gap-2">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search proxies..."
+              className="min-h-touch w-full flex-1 rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-2 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+            />
+            <button type="submit" className={`${btnGhost} px-4 py-2`}>Search</button>
+          </form>
+        </div>
+
+        <div className="relative mt-4 rounded-2xl border border-glass-border/80 bg-[var(--color-input-bg)]/35 p-5 md:p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-fg-muted">
+              {t(locale, 'dashboard.proxyAdmin.sectionAdd')}
+            </h3>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setIsBulkMode(false)}
+                className={`text-xs px-3 py-1 rounded-md transition-colors ${!isBulkMode ? 'bg-accent/20 text-accent font-semibold' : 'text-fg-muted hover:bg-white/5'}`}
+              >
+                Single
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsBulkMode(true)}
+                className={`text-xs px-3 py-1 rounded-md transition-colors ${isBulkMode ? 'bg-accent/20 text-accent font-semibold' : 'text-fg-muted hover:bg-white/5'}`}
+              >
+                Bulk
+              </button>
+            </div>
+          </div>
+          <form className={`flex ${isBulkMode ? 'flex-col' : 'flex-col sm:flex-row sm:items-end'} gap-4`} onSubmit={onCreate}>
             <div className="min-w-0 flex-1">
               <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="admin-proxy-accounts">
-                {t(locale, 'dashboard.proxyAdmin.accountsLabel')}
+                {t(locale, 'dashboard.proxyAdmin.accountsLabel')} {isBulkMode ? '(Comma or newline separated)' : ''}
               </label>
-              <input
-                id="admin-proxy-accounts"
-                type="email"
-                autoComplete="off"
-                value={accounts}
-                onChange={(e) => setAccounts(e.target.value)}
-                disabled={creating}
-                placeholder={t(locale, 'dashboard.proxyAdmin.accountsPlaceholder')}
-                className="min-h-touch w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
-              />
+              {isBulkMode ? (
+                <textarea
+                  id="admin-proxy-accounts"
+                  value={accounts}
+                  onChange={(e) => setAccounts(e.target.value)}
+                  disabled={creating}
+                  rows={4}
+                  placeholder="user1@example.com, user2@example.com"
+                  className="w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
+                />
+              ) : (
+                <input
+                  id="admin-proxy-accounts"
+                  type="email"
+                  autoComplete="off"
+                  value={accounts}
+                  onChange={(e) => setAccounts(e.target.value)}
+                  disabled={creating}
+                  placeholder={t(locale, 'dashboard.proxyAdmin.accountsPlaceholder')}
+                  className="min-h-touch w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
+                />
+              )}
             </div>
             <button type="submit" disabled={creating || !accounts.trim()} className={`${btnPrimary} w-full sm:w-auto sm:px-8`}>
               {creating ? t(locale, 'dashboard.proxyAdmin.creating') : t(locale, 'dashboard.proxyAdmin.add')}
@@ -249,6 +324,14 @@ export default function AdminProxyPanel() {
             role="alert"
           >
             {errorMsg}
+          </p>
+        ) : null}
+        {successMsg ? (
+          <p
+            className="relative mt-6 rounded-2xl border border-[var(--color-success)]/40 bg-[var(--color-success)]/10 px-4 py-3 text-center text-sm text-[#34d399]"
+            role="alert"
+          >
+            {successMsg}
           </p>
         ) : null}
 
@@ -392,6 +475,27 @@ export default function AdminProxyPanel() {
                 );
               })}
             </ul>
+          )}
+          {!loading && rows.length > 0 && totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => { setPage(p => p - 1); void load(page - 1, search); }}
+                className={btnGhost}
+              >
+                Previous
+              </button>
+              <span className="text-sm text-fg-muted font-medium">Page {page} of {totalPages}</span>
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => { setPage(p => p + 1); void load(page + 1, search); }}
+                className={btnGhost}
+              >
+                Next
+              </button>
+            </div>
           )}
         </div>
       </div>

@@ -52,6 +52,7 @@ export default function AdminProxyPanel() {
   const [creating, setCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [bulkResultsLinks, setBulkResultsLinks] = useState<string[]>([]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -132,6 +133,7 @@ export default function AdminProxyPanel() {
     setCreating(true);
     setErrorMsg(null);
     setSuccessMsg(null);
+    setBulkResultsLinks([]);
     try {
       if (isBulkMode) {
         const emails = accounts.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
@@ -140,6 +142,10 @@ export default function AdminProxyPanel() {
           return;
         }
         const res = await adminBulkCreateProxy(emails);
+        if (res.results) {
+           const links = res.results.filter(r => r.success && r.id).map(r => `${window.location.origin}/${r.id}`);
+           setBulkResultsLinks(links);
+        }
         if (res.failed > 0) {
           setErrorMsg(`Bulk create finished. ${res.success} success, ${res.failed} failed.`);
         } else {
@@ -201,7 +207,8 @@ export default function AdminProxyPanel() {
 
   const copyId = async (id: string) => {
     try {
-      await navigator.clipboard.writeText(id);
+      const link = `${window.location.origin}/${id}`;
+      await navigator.clipboard.writeText(link);
       setCopyFlashId(id);
       setTimeout(() => setCopyFlashId((cur) => (cur === id ? null : cur)), 1600);
     } catch {
@@ -333,6 +340,23 @@ export default function AdminProxyPanel() {
           >
             {successMsg}
           </p>
+        ) : null}
+        
+        {bulkResultsLinks.length > 0 ? (
+          <div className="relative mt-2 text-center">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(bulkResultsLinks.join('\n'));
+                  setSuccessMsg('Copied all new proxy links to clipboard!');
+                } catch {}
+              }}
+              className={`${btnGhost} mt-1`}
+            >
+              Copy all {bulkResultsLinks.length} newly created links
+            </button>
+          </div>
         ) : null}
 
         <div className="relative mt-10">

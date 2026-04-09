@@ -78,7 +78,6 @@ export default function AdminProxyPanel() {
   const load = useCallback(async (cPage = page, cSearch = search) => {
     setLoading(true);
     setErrorMsg(null);
-    setSuccessMsg(null);
     try {
       const result = await adminListProxies(cPage, limit, cSearch);
       setRows(result.data);
@@ -133,7 +132,9 @@ export default function AdminProxyPanel() {
     if (!accounts.trim()) return;
     setCreating(true);
     setErrorMsg(null);
+    // Only clear success message when starting a new create operation
     setSuccessMsg(null);
+    setLastBulkCreatedIds([]);
     try {
       if (isBulkMode) {
         const emails = accounts.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);

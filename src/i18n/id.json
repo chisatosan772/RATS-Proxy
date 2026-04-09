@@ -57,7 +57,7 @@
       "errorUpdate": "Gagal memperbarui proxy ini.",
       "errorDelete": "Gagal menghapus proxy ini.",
       "errorNotFound": "Proxy tidak ditemukan. Daftar diperbarui.",
-      "copyId": "Salin ID",
+      "copyLink": "Salin Tautan",
       "copied": "Tersalin",
       "edit": "Ubah",
       "save": "Simpan",

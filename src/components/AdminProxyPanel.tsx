@@ -52,7 +52,6 @@ export default function AdminProxyPanel() {
   const [creating, setCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [bulkResultsLinks, setBulkResultsLinks] = useState<string[]>([]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -62,6 +61,8 @@ export default function AdminProxyPanel() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [copyFlashId, setCopyFlashId] = useState<string | null>(null);
+  const [lastBulkCreatedIds, setLastBulkCreatedIds] = useState<string[]>([]);
+  const [bulkCopyFlash, setBulkCopyFlash] = useState(false);
 
   useLayoutEffect(() => {
     setLocale(getStoredLocale());
@@ -133,7 +134,6 @@ export default function AdminProxyPanel() {
     setCreating(true);
     setErrorMsg(null);
     setSuccessMsg(null);
-    setBulkResultsLinks([]);
     try {
       if (isBulkMode) {
         const emails = accounts.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
@@ -142,10 +142,10 @@ export default function AdminProxyPanel() {
           return;
         }
         const res = await adminBulkCreateProxy(emails);
-        if (res.results) {
-           const links = res.results.filter(r => r.success && r.id).map(r => `${window.location.origin}/${r.id}`);
-           setBulkResultsLinks(links);
-        }
+        
+        const successIds = res.results.filter(r => r.success && r.id).map(r => r.id as string);
+        setLastBulkCreatedIds(successIds);
+
         if (res.failed > 0) {
           setErrorMsg(`Bulk create finished. ${res.success} success, ${res.failed} failed.`);
         } else {
@@ -153,6 +153,7 @@ export default function AdminProxyPanel() {
         }
       } else {
         await adminCreateProxy(accounts.trim());
+        setLastBulkCreatedIds([]);
         setSuccessMsg(t(locale, 'dashboard.proxyAdmin.successCreate') ?? 'Proxy created successfully.');
       }
       setAccounts('');
@@ -205,12 +206,24 @@ export default function AdminProxyPanel() {
     }
   };
 
-  const copyId = async (id: string) => {
+  const copyLink = async (id: string) => {
     try {
-      const link = `${window.location.origin}/${id}`;
+      const link = `${window.location.host}/${id}`;
       await navigator.clipboard.writeText(link);
       setCopyFlashId(id);
       setTimeout(() => setCopyFlashId((cur) => (cur === id ? null : cur)), 1600);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const copyAllLinks = async () => {
+    if (!lastBulkCreatedIds.length) return;
+    try {
+      const links = lastBulkCreatedIds.map(id => `${window.location.host}/${id}`).join('\n');
+      await navigator.clipboard.writeText(links);
+      setBulkCopyFlash(true);
+      setTimeout(() => setBulkCopyFlash(false), 2000);
     } catch {
       /* ignore */
     }
@@ -334,28 +347,15 @@ export default function AdminProxyPanel() {
           </p>
         ) : null}
         {successMsg ? (
-          <p
-            className="relative mt-6 rounded-2xl border border-[var(--color-success)]/40 bg-[var(--color-success)]/10 px-4 py-3 text-center text-sm text-[#34d399]"
-            role="alert"
-          >
-            {successMsg}
-          </p>
-        ) : null}
-        
-        {bulkResultsLinks.length > 0 ? (
-          <div className="relative mt-2 text-center">
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(bulkResultsLinks.join('\n'));
-                  setSuccessMsg('Copied all new proxy links to clipboard!');
-                } catch {}
-              }}
-              className={`${btnGhost} mt-1`}
-            >
-              Copy all {bulkResultsLinks.length} newly created links
-            </button>
+          <div className="relative mt-6 rounded-2xl border border-[var(--color-success)]/40 bg-[var(--color-success)]/10 px-4 py-3 flex flex-col items-center gap-3">
+            <p className="text-sm text-[#34d399]" role="alert">
+              {successMsg}
+            </p>
+            {isBulkMode && lastBulkCreatedIds.length > 0 && (
+              <button type="button" onClick={copyAllLinks} className={`${btnGhost} !min-h-0 text-xs px-3 py-2`}>
+                {bulkCopyFlash ? 'Copied All!' : 'Copy All Success Links'}
+              </button>
+            )}
           </div>
         ) : null}
 
@@ -404,12 +404,12 @@ export default function AdminProxyPanel() {
                           </code>
                           <button
                             type="button"
-                            onClick={() => void copyId(r.id)}
+                            onClick={() => void copyLink(r.id)}
                             className={`${btnGhost} !min-h-0 px-3 py-1.5 text-xs`}
                           >
                             {copyFlashId === r.id
                               ? t(locale, 'dashboard.proxyAdmin.copied')
-                              : t(locale, 'dashboard.proxyAdmin.copyId')}
+                              : t(locale, 'dashboard.proxyAdmin.copyLink')}
                           </button>
                         </div>
 

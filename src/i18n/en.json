@@ -57,7 +57,7 @@
       "errorUpdate": "Could not update this proxy.",
       "errorDelete": "Could not delete this proxy.",
       "errorNotFound": "That proxy no longer exists. List refreshed.",
-      "copyId": "Copy ID",
+      "copyLink": "Copy Link",
       "copied": "Copied",
       "edit": "Edit",
       "save": "Save",

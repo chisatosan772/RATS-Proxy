@@ -194,6 +194,8 @@ export async function loginRequest(email: string, password: string): Promise<Log
 export type CheckProxyResult = {
   remaining: number;
   used: number;
+  unit: 'MB' | 'GB';
+  proxyType: 'owlproxy' | 'fusionproxy';
 };
 
 function checkProxyErrorKind(msg: string): ApiError['kind'] {
@@ -223,7 +225,9 @@ export async function checkProxyRequest(uuid: string): Promise<CheckProxyResult>
       const d = o.data as Record<string, unknown>;
       const remaining = Number(d.remainingTraffic ?? d.remaining ?? 0);
       const used = Number(d.useTraffic ?? d.usedTraffic ?? d.used ?? 0);
-      return { remaining, used };
+      const unit = (d.unit === 'GB' ? 'GB' : 'MB') as 'MB' | 'GB';
+      const proxyType = (d.proxyType === 'fusionproxy' ? 'fusionproxy' : 'owlproxy') as 'owlproxy' | 'fusionproxy';
+      return { remaining, used, unit, proxyType };
     }
     if (o.success === false && typeof o.error === 'string') {
       const kind = checkProxyErrorKind(o.error);
@@ -251,23 +255,34 @@ export async function checkProxyRequest(uuid: string): Promise<CheckProxyResult>
 }
 
 export type ProxyRegion = {
-  city: string;
-  state: string;
-  countryName: string;
-  region: string;
+  city?: string;
+  state?: string;
+  countryName?: string;
+  region?: string;
+  name?: string; // For FusionProxy simple countries
 };
 
 function parseProxyRegionRow(row: unknown): ProxyRegion | null {
   if (!row || typeof row !== 'object') return null;
   const o = row as Record<string, unknown>;
+  
+  // FusionProxy format: { name: "United States" }
+  if (typeof o.name === 'string' && o.name.trim()) {
+    return { name: o.name.trim() };
+  }
+  
+  // OwlProxy format: { region, city, state, countryName }
   const region = typeof o.region === 'string' ? o.region.trim() : '';
-  if (!region) return null;
-  return {
-    city: typeof o.city === 'string' ? o.city : '',
-    state: typeof o.state === 'string' ? o.state : '',
-    countryName: typeof o.countryName === 'string' ? o.countryName : '',
-    region,
-  };
+  if (region) {
+    return {
+      region,
+      city: typeof o.city === 'string' ? o.city : '',
+      state: typeof o.state === 'string' ? o.state : '',
+      countryName: typeof o.countryName === 'string' ? o.countryName : '',
+    };
+  }
+  
+  return null;
 }
 
 /** `POST /api/getProxyRegion` — Owl Proxy region list for a UUID (public). */

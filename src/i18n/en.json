@@ -81,7 +81,7 @@
     "create": "Create proxy",
     "creating": "Creating…",
     "selectCountry": "Select country",
-    "selectRegion": "Select region",
+    "selectRegion": "Select region or country",
     "regionsEmpty": "No regions are available for this proxy.",
     "result": "Your proxy",
     "copy": "Copy",

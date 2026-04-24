@@ -41,6 +41,8 @@ export default function ProxyChecker({ uuid }: Props) {
   const [phase, setPhase] = useState<Phase>('loading_quota');
   const [remaining, setRemaining] = useState(0);
   const [used, setUsed] = useState(0);
+  const [unit, setUnit] = useState<'MB' | 'GB'>('MB');
+  const [proxyType, setProxyType] = useState<'owlproxy' | 'fusionproxy'>('owlproxy');
   const [errorMsg, setErrorMsg] = useState('');
   const [regions, setRegions] = useState<ProxyRegion[]>([]);
   const [regionsError, setRegionsError] = useState<string | null>(null);
@@ -59,7 +61,7 @@ export default function ProxyChecker({ uuid }: Props) {
     return () => window.removeEventListener('langchange', onLang);
   }, []);
 
-  const selectedRegionCode = regions[selectedIndex]?.region ?? '';
+  const selectedRegionCode = regions[selectedIndex]?.region ?? regions[selectedIndex]?.name ?? '';
 
   const loadQuota = useCallback(async () => {
     if (!UUID_RE.test(uuid)) {
@@ -76,6 +78,8 @@ export default function ProxyChecker({ uuid }: Props) {
       const r = await checkProxyRequest(uuid);
       setRemaining(r.remaining);
       setUsed(r.used);
+      setUnit(r.unit);
+      setProxyType(r.proxyType);
 
       try {
         const list = await getProxyRegionRequest(uuid);
@@ -211,7 +215,7 @@ export default function ProxyChecker({ uuid }: Props) {
           <div className="grid gap-6 md:grid-cols-2">
             <div className="glass-panel rounded-2xl p-5">
               <p className="text-sm font-medium text-fg-muted">{t(locale, 'proxy.remaining')}</p>
-              <p className="mt-2 text-2xl font-bold text-fg">{remaining} <span className="text-base font-medium text-fg-muted">MB</span></p>
+              <p className="mt-2 text-2xl font-bold text-fg">{remaining} <span className="text-base font-medium text-fg-muted">{unit}</span></p>
               <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-fg-muted/20">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-accent to-accent-2 transition-all duration-500"
@@ -221,7 +225,7 @@ export default function ProxyChecker({ uuid }: Props) {
             </div>
             <div className="glass-panel rounded-2xl p-5">
               <p className="text-sm font-medium text-fg-muted">{t(locale, 'proxy.used')}</p>
-              <p className="mt-2 text-2xl font-bold text-fg">{used} <span className="text-base font-medium text-fg-muted">MB</span></p>
+              <p className="mt-2 text-2xl font-bold text-fg">{used} <span className="text-base font-medium text-fg-muted">{unit}</span></p>
               <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-fg-muted/20">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-accent to-accent-2 transition-all duration-500"
@@ -266,11 +270,13 @@ export default function ProxyChecker({ uuid }: Props) {
                   {(() => {
                     const seen = new Set<string>();
                     return regions.map((reg, i) => {
-                      const displayName = reg.countryName || reg.region;
-                      if (seen.has(displayName)) return null;
+                      // For FusionProxy: use name
+                      // For OwlProxy: use countryName or region
+                      const displayName = reg.name || reg.countryName || reg.region || '';
+                      if (!displayName || seen.has(displayName)) return null;
                       seen.add(displayName);
                       return (
-                        <option key={`${reg.region}-${reg.city}-${reg.state}-${i}`} value={i}>
+                        <option key={`${reg.region || reg.name}-${reg.city || ''}-${reg.state || ''}-${i}`} value={i}>
                           {displayName}
                         </option>
                       );

@@ -41,7 +41,7 @@
     "roleUser": "Pengguna",
     "proxyAdmin": {
       "title": "Manajemen proxy",
-      "subtitle": "Buat, ubah, atau hapus entri proxy Owl yang terikat ke akun pelanggan.",
+      "subtitle": "Buat, ubah, atau hapus entri proxy OwlProxy dan FusionProxy.",
       "totalProxies": "{{count}} proxy",
       "sectionAdd": "Proxy baru",
       "sectionList": "Daftar proxy",

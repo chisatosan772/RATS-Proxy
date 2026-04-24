@@ -41,7 +41,7 @@
     "roleUser": "User",
     "proxyAdmin": {
       "title": "Proxy management",
-      "subtitle": "Create, edit, or remove Owl proxy entries tied to customer accounts.",
+      "subtitle": "Create, edit, or remove proxy entries for OwlProxy and FusionProxy.",
       "totalProxies": "{{count}} proxies",
       "sectionAdd": "New proxy",
       "sectionList": "Your proxies",

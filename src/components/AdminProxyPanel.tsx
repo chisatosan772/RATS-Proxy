@@ -7,6 +7,8 @@ import {
   adminUpdateProxy,
   ApiError,
   type AdminProxyRow,
+  type CreateProxyPayload,
+  type BulkCreateProxyPayload,
 } from '../lib/api';
 import { USER_PROFILE_KEY } from '../lib/auth';
 import { getStoredLocale, t, type Locale } from '../i18n';
@@ -49,6 +51,8 @@ export default function AdminProxyPanel() {
   const [isBulkMode, setIsBulkMode] = useState(false);
 
   const [accounts, setAccounts] = useState('');
+  const [proxyType, setProxyType] = useState<'owlproxy' | 'fusionproxy'>('owlproxy');
+  const [password, setPassword] = useState('');
   const [creating, setCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -130,9 +134,10 @@ export default function AdminProxyPanel() {
   const onCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!accounts.trim()) return;
+    if (proxyType === 'fusionproxy' && !password.trim()) return;
+    
     setCreating(true);
     setErrorMsg(null);
-    // Only clear success message when starting a new create operation
     setSuccessMsg(null);
     setLastBulkCreatedIds([]);
     try {
@@ -142,7 +147,12 @@ export default function AdminProxyPanel() {
           setCreating(false);
           return;
         }
-        const res = await adminBulkCreateProxy(emails);
+        const payload: BulkCreateProxyPayload = {
+          emails,
+          proxy_type: proxyType,
+          ...(proxyType === 'fusionproxy' && password.trim() ? { password: password.trim() } : {}),
+        };
+        const res = await adminBulkCreateProxy(payload);
         
         const successIds = res.results.filter(r => r.success && r.id).map(r => r.id as string);
         setLastBulkCreatedIds(successIds);
@@ -153,11 +163,17 @@ export default function AdminProxyPanel() {
           setSuccessMsg(`Successfully created ${res.success} proxies.`);
         }
       } else {
-        await adminCreateProxy(accounts.trim());
+        const payload: CreateProxyPayload = {
+          accounts: accounts.trim(),
+          proxy_type: proxyType,
+          ...(proxyType === 'fusionproxy' && password.trim() ? { password: password.trim() } : {}),
+        };
+        await adminCreateProxy(payload);
         setLastBulkCreatedIds([]);
         setSuccessMsg(t(locale, 'dashboard.proxyAdmin.successCreate') ?? 'Proxy created successfully.');
       }
       setAccounts('');
+      setPassword('');
       setPage(1);
       await load(1, search);
     } catch (err) {
@@ -305,8 +321,47 @@ export default function AdminProxyPanel() {
               </button>
             </div>
           </div>
-          <form className={`flex ${isBulkMode ? 'flex-col' : 'flex-col sm:flex-row sm:items-end'} gap-4`} onSubmit={onCreate}>
-            <div className="min-w-0 flex-1">
+          <form className={`flex flex-col gap-4`} onSubmit={onCreate}>
+            {/* Proxy Type Selection */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="proxy-type">
+                  Proxy Type
+                </label>
+                <select
+                  id="proxy-type"
+                  value={proxyType}
+                  onChange={(e) => setProxyType(e.target.value as 'owlproxy' | 'fusionproxy')}
+                  disabled={creating}
+                  className="min-h-touch w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
+                >
+                  <option value="owlproxy">OwlProxy (MB)</option>
+                  <option value="fusionproxy">FusionProxy (GB)</option>
+                </select>
+              </div>
+
+              {/* Password field - only for FusionProxy */}
+              {proxyType === 'fusionproxy' && (
+                <div>
+                  <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="proxy-password">
+                    Password
+                  </label>
+                  <input
+                    id="proxy-password"
+                    type="password"
+                    autoComplete="off"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={creating}
+                    placeholder="Password for FusionProxy"
+                    className="min-h-touch w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Accounts/Email field */}
+            <div>
               <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="admin-proxy-accounts">
                 {t(locale, 'dashboard.proxyAdmin.accountsLabel')} {isBulkMode ? '(Comma or newline separated)' : ''}
               </label>
@@ -333,7 +388,13 @@ export default function AdminProxyPanel() {
                 />
               )}
             </div>
-            <button type="submit" disabled={creating || !accounts.trim()} className={`${btnPrimary} w-full sm:w-auto sm:px-8`}>
+
+            {/* Submit button */}
+            <button 
+              type="submit" 
+              disabled={creating || !accounts.trim() || (proxyType === 'fusionproxy' && !password.trim())} 
+              className={`${btnPrimary} w-full`}
+            >
               {creating ? t(locale, 'dashboard.proxyAdmin.creating') : t(locale, 'dashboard.proxyAdmin.add')}
             </button>
           </form>

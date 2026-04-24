@@ -546,13 +546,19 @@ export async function adminListProxies(page = 1, limit = 10, search = ''): Promi
   throw new ApiError('unknown', 'unknown');
 }
 
-export async function adminCreateProxy(accounts: string): Promise<void> {
+export type CreateProxyPayload = {
+  accounts: string;
+  proxy_type: 'owlproxy' | 'fusionproxy';
+  password?: string; // Required for fusionproxy
+};
+
+export async function adminCreateProxy(payload: CreateProxyPayload): Promise<void> {
   let res: Response;
   try {
     res = await fetchWithAdminAuth(`${API_BASE_URL}/api/proxy`, {
       method: 'POST',
       headers: adminAuthHeaders(),
-      body: JSON.stringify({ accounts: accounts.trim() }),
+      body: JSON.stringify(payload),
     });
   } catch {
     throw new ApiError('network', 'network');
@@ -582,13 +588,19 @@ export type BulkAdminProxyResult = {
   results: { email: string; success: boolean; id?: string; error?: string }[];
 };
 
-export async function adminBulkCreateProxy(emails: string[]): Promise<BulkAdminProxyResult> {
+export type BulkCreateProxyPayload = {
+  emails: string[];
+  proxy_type: 'owlproxy' | 'fusionproxy';
+  password?: string; // Required for fusionproxy
+};
+
+export async function adminBulkCreateProxy(payload: BulkCreateProxyPayload): Promise<BulkAdminProxyResult> {
   let res: Response;
   try {
     res = await fetchWithAdminAuth(`${API_BASE_URL}/api/proxy/bulk`, {
       method: 'POST',
       headers: adminAuthHeaders(),
-      body: JSON.stringify({ emails }),
+      body: JSON.stringify(payload),
     });
   } catch {
     throw new ApiError('network', 'network');

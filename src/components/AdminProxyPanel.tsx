@@ -149,19 +149,27 @@ export default function AdminProxyPanel() {
         }
 
         let emails: string[] = [];
-        let passwords: string[] | undefined;
+        let passwords: string[] | undefined = undefined;
 
         if (proxyType === 'fusionproxy') {
-          // Parse email:password format
+          // FusionProxy: Parse email:password format
           const parsed = lines.map(line => {
-            const [email, pwd] = line.split(':').map(s => s.trim());
+            const parts = line.split(':');
+            const email = parts[0]?.trim();
+            const pwd = parts[1]?.trim();
             return { email, pwd };
           }).filter(p => p.email && p.pwd);
           
+          if (parsed.length === 0) {
+            setErrorMsg('Invalid format for FusionProxy. Use: email:password per line');
+            setCreating(false);
+            return;
+          }
+
           emails = parsed.map(p => p.email);
           passwords = parsed.map(p => p.pwd);
         } else {
-          // OwlProxy: just emails
+          // OwlProxy: just emails, one per line
           emails = lines;
         }
 
@@ -170,11 +178,17 @@ export default function AdminProxyPanel() {
           return;
         }
 
+        // Build payload
         const payload: BulkCreateProxyPayload = {
           emails,
           proxy_type: proxyType,
-          ...(passwords ? { passwords } : {}),
         };
+        
+        // Only add passwords for FusionProxy
+        if (proxyType === 'fusionproxy' && passwords && passwords.length > 0) {
+          payload.passwords = passwords;
+        }
+
         const res = await adminBulkCreateProxy(payload);
         
         const successIds = res.results.filter(r => r.success && r.id).map(r => r.id as string);
@@ -186,11 +200,17 @@ export default function AdminProxyPanel() {
           setSuccessMsg(`Successfully created ${res.success} proxies.`);
         }
       } else {
+        // Single mode
         const payload: CreateProxyPayload = {
           accounts: accounts.trim(),
           proxy_type: proxyType,
-          ...(proxyType === 'fusionproxy' && password.trim() ? { password: password.trim() } : {}),
         };
+        
+        // Only add password for FusionProxy in single mode
+        if (proxyType === 'fusionproxy' && password.trim()) {
+          payload.password = password.trim();
+        }
+
         await adminCreateProxy(payload);
         setLastBulkCreatedIds([]);
         setSuccessMsg(t(locale, 'dashboard.proxyAdmin.successCreate') ?? 'Proxy created successfully.');

@@ -590,7 +590,7 @@ export type BulkAdminProxyResult = {
 
 export type BulkCreateProxyPayload = {
   emails: string[];
-  passwords?: string[]; // For fusionproxy bulk
+  passwords?: string[]; // Only for fusionproxy
   proxy_type: 'owlproxy' | 'fusionproxy';
 };
 

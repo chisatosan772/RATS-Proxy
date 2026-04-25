@@ -343,26 +343,6 @@ export default function ProxyChecker({ uuid }: Props) {
               >
                 <p className="text-sm font-medium text-fg-muted mb-5">{t(locale, 'proxy.result')}</p>
                 
-                {/* Protocol */}
-                <div className="mb-4">
-                  <label className="text-xs font-medium text-fg-muted uppercase tracking-wide">Protocol</label>
-                  <div className="mt-2 flex items-center gap-2">
-                    <div className="flex-1 rounded-xl bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg">
-                      {protocol}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => void copyField(protocol)}
-                      className="min-h-touch shrink-0 rounded-xl border border-glass-border p-3 text-fg transition-all hover:border-accent hover:shadow-glow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-                      title="Copy"
-                    >
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
                 {/* Proxy Address */}
                 <div className="mb-4">
                   <label className="text-xs font-medium text-fg-muted uppercase tracking-wide">Proxy Address</label>
@@ -405,7 +385,7 @@ export default function ProxyChecker({ uuid }: Props) {
 
                 {/* Username */}
                 <div className="mb-4">
-                  <label className="text-xs font-medium text-fg-muted uppercase tracking-wide">Username (with settings)</label>
+                  <label className="text-xs font-medium text-fg-muted uppercase tracking-wide">Username</label>
                   <div className="mt-2 flex items-center gap-2">
                     <code className="flex-1 break-all rounded-xl bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg font-mono">
                       {username}

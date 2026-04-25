@@ -6,6 +6,11 @@ const UUID_RE = /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}
 
 type Phase = 'invalid_uuid' | 'loading_quota' | 'quota' | 'creating' | 'result' | 'error';
 
+function formatTraffic(value: number): string {
+  // Round to 2 decimal places
+  return String(Math.round(value * 100) / 100);
+}
+
 function messageForProxyApiError(locale: Locale, err: ApiError): string {
   if (err.serverError) {
     const se = err.serverError.toLowerCase();
@@ -215,7 +220,7 @@ export default function ProxyChecker({ uuid }: Props) {
           <div className="grid gap-6 md:grid-cols-2">
             <div className="glass-panel rounded-2xl p-5">
               <p className="text-sm font-medium text-fg-muted">{t(locale, 'proxy.remaining')}</p>
-              <p className="mt-2 text-2xl font-bold text-fg">{remaining} <span className="text-base font-medium text-fg-muted">{unit}</span></p>
+              <p className="mt-2 text-2xl font-bold text-fg">{formatTraffic(remaining)} <span className="text-base font-medium text-fg-muted">{unit}</span></p>
               <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-fg-muted/20">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-accent to-accent-2 transition-all duration-500"
@@ -225,7 +230,7 @@ export default function ProxyChecker({ uuid }: Props) {
             </div>
             <div className="glass-panel rounded-2xl p-5">
               <p className="text-sm font-medium text-fg-muted">{t(locale, 'proxy.used')}</p>
-              <p className="mt-2 text-2xl font-bold text-fg">{used} <span className="text-base font-medium text-fg-muted">{unit}</span></p>
+              <p className="mt-2 text-2xl font-bold text-fg">{formatTraffic(used)} <span className="text-base font-medium text-fg-muted">{unit}</span></p>
               <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-fg-muted/20">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-accent to-accent-2 transition-all duration-500"

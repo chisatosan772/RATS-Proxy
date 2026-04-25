@@ -156,17 +156,6 @@ export default function ProxyChecker({ uuid }: Props) {
     }
   };
 
-  const onCopy = async () => {
-    if (!proxyLine) return;
-    try {
-      await navigator.clipboard.writeText(proxyLine);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* ignore */
-    }
-  };
-
   const totalTraffic = Math.max(remaining + used, 1);
   const pctRemaining = Math.min(100, Math.round((remaining / totalTraffic) * 100));
 
@@ -323,7 +312,6 @@ export default function ProxyChecker({ uuid }: Props) {
             const port = parts[1] || '';
             const username = parts.slice(2, -1).join(':') || '';
             const password = parts[parts.length - 1] || '';
-            const protocol = 'HTTP';
 
             const copyField = async (text: string) => {
               try {

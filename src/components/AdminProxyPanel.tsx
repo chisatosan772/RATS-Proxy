@@ -149,14 +149,10 @@ export default function AdminProxyPanel() {
         }
 
         let emails: string[] = [];
-        let bulkPassword: string | undefined;
 
         if (proxyType === 'fusionproxy') {
-          // Parse email:password format
-          emails = lines.map(line => {
-            const [email] = line.split(':');
-            return email.trim();
-          }).filter(Boolean);
+          // For FusionProxy bulk: keep email:password format as-is
+          emails = lines.filter(line => line.includes(':') && line.split(':')[0].trim());
         } else {
           // OwlProxy: just emails
           emails = lines;

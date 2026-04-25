@@ -285,7 +285,7 @@ function parseProxyRegionRow(row: unknown): ProxyRegion | null {
   return null;
 }
 
-/** `POST /api/getProxyRegion` — Owl Proxy region list for a UUID (public). */
+/** `POST /api/getProxyRegion` — Get regions/countries for a proxy UUID (public). */
 export async function getProxyRegionRequest(uuid: string): Promise<ProxyRegion[]> {
   let res: Response;
   try {

@@ -322,43 +322,52 @@ export default function AdminProxyPanel() {
             </div>
           </div>
           <form className={`flex flex-col gap-4`} onSubmit={onCreate}>
-            {/* Proxy Type Selection */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="proxy-type">
-                  Proxy Type
-                </label>
-                <select
-                  id="proxy-type"
-                  value={proxyType}
-                  onChange={(e) => setProxyType(e.target.value as 'owlproxy' | 'fusionproxy')}
-                  disabled={creating}
-                  className="min-h-touch w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
-                >
-                  <option value="owlproxy">OwlProxy (MB)</option>
-                  <option value="fusionproxy">FusionProxy (GB)</option>
-                </select>
-              </div>
-
-              {/* Password field - only for FusionProxy */}
-              {proxyType === 'fusionproxy' && (
-                <div>
-                  <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="proxy-password">
-                    Password
-                  </label>
-                  <input
-                    id="proxy-password"
-                    type="password"
-                    autoComplete="off"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={creating}
-                    placeholder="Password for FusionProxy"
-                    className="min-h-touch w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
-                  />
-                </div>
-              )}
+            {/* Proxy Type Toggle Buttons */}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setProxyType('owlproxy')}
+                disabled={creating}
+                className={`flex-1 min-h-touch rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+                  proxyType === 'owlproxy'
+                    ? 'bg-gradient-to-r from-accent to-accent-2 text-white shadow-glow'
+                    : 'border border-glass-border bg-[var(--color-input-bg)] text-fg hover:border-accent/50'
+                } disabled:opacity-60`}
+              >
+                OwlProxy
+              </button>
+              <button
+                type="button"
+                onClick={() => setProxyType('fusionproxy')}
+                disabled={creating}
+                className={`flex-1 min-h-touch rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+                  proxyType === 'fusionproxy'
+                    ? 'bg-gradient-to-r from-accent to-accent-2 text-white shadow-glow'
+                    : 'border border-glass-border bg-[var(--color-input-bg)] text-fg hover:border-accent/50'
+                } disabled:opacity-60`}
+              >
+                FusionProxy
+              </button>
             </div>
+
+            {/* Password field - only for FusionProxy */}
+            {proxyType === 'fusionproxy' && (
+              <div>
+                <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="proxy-password">
+                  Password
+                </label>
+                <input
+                  id="proxy-password"
+                  type="password"
+                  autoComplete="off"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={creating}
+                  placeholder="Password for FusionProxy"
+                  className="min-h-touch w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
+                />
+              </div>
+            )}
 
             {/* Accounts/Email field */}
             <div>

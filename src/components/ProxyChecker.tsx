@@ -318,21 +318,143 @@ export default function ProxyChecker({ uuid }: Props) {
 
           {phase === 'result' && proxyLine ? (
             <div
-              className={`glass-panel rounded-2xl p-5 transition-transform duration-300 ${
+              className={`glass-panel rounded-2xl p-6 transition-transform duration-300 ${
                 successPulse ? 'scale-[1.02] shadow-glow' : ''
               }`}
             >
-              <p className="text-sm font-medium text-fg-muted">{t(locale, 'proxy.result')}</p>
-              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <code className="flex-1 break-all rounded-xl bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg">
-                  {proxyLine}
-                </code>
+              <div className="space-y-4">
+                {/* Protocol Field */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-fg-muted">Protocol</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value="HTTP"
+                      readOnly
+                      className="w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg cursor-not-allowed appearance-none pr-10"
+                    />
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-fg-muted">
+                      <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Proxy Address and Port Row */}
+                <div className="grid gap-4 md:grid-cols-[1fr_120px]">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-fg-muted">Proxy Address</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={proxyLine.split(':')[0] || ''}
+                        readOnly
+                        className="w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg cursor-not-allowed"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(proxyLine.split(':')[0] || '');
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        className="absolute inset-y-0 right-0 flex items-center px-4 text-fg-muted hover:text-accent transition-colors"
+                        title="Copy proxy address"
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-fg-muted">Port</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={proxyLine.split(':')[1] || ''}
+                        readOnly
+                        className="w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg cursor-not-allowed"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(proxyLine.split(':')[1] || '');
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        className="absolute inset-y-0 right-0 flex items-center px-4 text-fg-muted hover:text-accent transition-colors"
+                        title="Copy port"
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Full Proxy Line */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-fg-muted">Full Proxy Line</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={proxyLine}
+                      readOnly
+                      className="w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg cursor-not-allowed font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void onCopy()}
+                      className="absolute inset-y-0 right-0 flex items-center px-4 text-fg-muted hover:text-accent transition-colors"
+                      title={copied ? 'Copied!' : 'Copy full proxy line'}
+                    >
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* cURL Example */}
+                <div className="mt-6 pt-6 border-t border-glass-border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <svg className="h-4 w-4 text-accent" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20 19V7H4v12zm0-16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-7 14v-2h5v2zm-3.42-4L5.57 9H8.4l3.3 3.3c.39.39.39 1.03 0 1.42L8.42 17H5.59z" />
+                    </svg>
+                    <span className="text-sm font-semibold text-fg">cURL Example</span>
+                  </div>
+                  <div className="relative">
+                    <code className="block w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-xs text-fg font-mono break-all overflow-x-auto">
+                      curl -x {proxyLine} -U "username:password" ipinfo.io
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`curl -x ${proxyLine} -U "username:password" ipinfo.io`);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-lg bg-accent/20 text-accent hover:bg-accent/30 transition-colors text-xs font-medium"
+                      title="Copy cURL command"
+                    >
+                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z" />
+                      </svg>
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                {/* Main Copy Button */}
                 <button
                   type="button"
                   onClick={() => void onCopy()}
-                  className="min-h-touch shrink-0 rounded-xl border border-glass-border px-5 py-3 text-sm font-semibold text-fg transition-all hover:border-accent hover:shadow-glow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                  className="min-h-touch w-full mt-4 rounded-xl bg-gradient-to-r from-accent via-accent-2 to-accent px-5 py-3 font-semibold text-white shadow-glow transition-all duration-300 hover:scale-[1.02] hover:shadow-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                 >
-                  {copied ? t(locale, 'proxy.copied') : t(locale, 'proxy.copy')}
+                  {copied ? '✓ ' + t(locale, 'proxy.copied') : t(locale, 'proxy.copy')}
                 </button>
               </div>
             </div>

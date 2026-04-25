@@ -370,25 +370,6 @@ export default function AdminProxyPanel() {
               </button>
             </div>
 
-            {/* Password field - only for FusionProxy */}
-            {proxyType === 'fusionproxy' && (
-              <div>
-                <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="proxy-password">
-                  Password
-                </label>
-                <input
-                  id="proxy-password"
-                  type="password"
-                  autoComplete="off"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={creating}
-                  placeholder="Password for FusionProxy"
-                  className="min-h-touch w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
-                />
-              </div>
-            )}
-
             {/* Accounts/Email field */}
             <div>
               <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="admin-proxy-accounts">
@@ -423,10 +404,29 @@ export default function AdminProxyPanel() {
               )}
             </div>
 
+            {/* Password field - only for Single mode FusionProxy */}
+            {!isBulkMode && proxyType === 'fusionproxy' && (
+              <div>
+                <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="proxy-password">
+                  Password
+                </label>
+                <input
+                  id="proxy-password"
+                  type="password"
+                  autoComplete="off"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={creating}
+                  placeholder="Password for FusionProxy"
+                  className="min-h-touch w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
+                />
+              </div>
+            )}
+
             {/* Submit button */}
             <button 
               type="submit" 
-              disabled={creating || !accounts.trim() || (proxyType === 'fusionproxy' && !password.trim())} 
+              disabled={creating || !accounts.trim() || (!isBulkMode && proxyType === 'fusionproxy' && !password.trim())} 
               className={`${btnPrimary} w-full`}
             >
               {creating ? t(locale, 'dashboard.proxyAdmin.creating') : t(locale, 'dashboard.proxyAdmin.add')}

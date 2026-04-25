@@ -42,7 +42,6 @@ export default function ProxyChecker({ uuid }: Props) {
   const [remaining, setRemaining] = useState(0);
   const [used, setUsed] = useState(0);
   const [unit, setUnit] = useState<'MB' | 'GB'>('MB');
-  const [proxyType, setProxyType] = useState<'owlproxy' | 'fusionproxy'>('owlproxy');
   const [errorMsg, setErrorMsg] = useState('');
   const [regions, setRegions] = useState<ProxyRegion[]>([]);
   const [regionsError, setRegionsError] = useState<string | null>(null);
@@ -79,7 +78,7 @@ export default function ProxyChecker({ uuid }: Props) {
       setRemaining(r.remaining);
       setUsed(r.used);
       setUnit(r.unit);
-      setProxyType(r.proxyType);
+      // proxyType is detected but not displayed
 
       try {
         const list = await getProxyRegionRequest(uuid);
@@ -135,7 +134,8 @@ export default function ProxyChecker({ uuid }: Props) {
     setPhase('creating');
     setErrorMsg('');
     try {
-      const line = await createProxyRequest(uuid, selectedRegionCode.trim().toUpperCase());
+      // Send country/region as-is from the region data (don't uppercase)
+      const line = await createProxyRequest(uuid, selectedRegionCode.trim());
       setProxyLine(line);
       setPhase('result');
       setSuccessPulse(true);

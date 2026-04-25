@@ -134,7 +134,7 @@ export default function AdminProxyPanel() {
   const onCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!accounts.trim()) return;
-    if (proxyType === 'fusionproxy' && !password.trim()) return;
+    if (proxyType === 'fusionproxy' && !isBulkMode && !password.trim()) return;
     
     setCreating(true);
     setErrorMsg(null);
@@ -142,11 +142,31 @@ export default function AdminProxyPanel() {
     setLastBulkCreatedIds([]);
     try {
       if (isBulkMode) {
-        const emails = accounts.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
+        const lines = accounts.split(/\n+/).map((s) => s.trim()).filter(Boolean);
+        if (!lines.length) {
+          setCreating(false);
+          return;
+        }
+
+        let emails: string[] = [];
+        let bulkPassword: string | undefined;
+
+        if (proxyType === 'fusionproxy') {
+          // Parse email:password format
+          emails = lines.map(line => {
+            const [email] = line.split(':');
+            return email.trim();
+          }).filter(Boolean);
+        } else {
+          // OwlProxy: just emails
+          emails = lines;
+        }
+
         if (!emails.length) {
           setCreating(false);
           return;
         }
+
         const payload: BulkCreateProxyPayload = {
           emails,
           proxy_type: proxyType,
@@ -372,7 +392,12 @@ export default function AdminProxyPanel() {
             {/* Accounts/Email field */}
             <div>
               <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="admin-proxy-accounts">
-                {t(locale, 'dashboard.proxyAdmin.accountsLabel')} {isBulkMode ? '(Comma or newline separated)' : ''}
+                {t(locale, 'dashboard.proxyAdmin.accountsLabel')} 
+                {isBulkMode && (
+                  <span className="text-xs text-fg-muted/70 ml-2">
+                    {proxyType === 'fusionproxy' ? '(email:password per line)' : '(one per line)'}
+                  </span>
+                )}
               </label>
               {isBulkMode ? (
                 <textarea
@@ -381,7 +406,7 @@ export default function AdminProxyPanel() {
                   onChange={(e) => setAccounts(e.target.value)}
                   disabled={creating}
                   rows={4}
-                  placeholder="user1@example.com, user2@example.com"
+                  placeholder={proxyType === 'fusionproxy' ? 'user1@example.com:pass123\nuser2@example.com:pass456' : 'user1@example.com\nuser2@example.com'}
                   className="w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
                 />
               ) : (

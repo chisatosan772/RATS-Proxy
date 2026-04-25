@@ -589,9 +589,9 @@ export type BulkAdminProxyResult = {
 };
 
 export type BulkCreateProxyPayload = {
-  accounts: string[];
+  emails: string[];
+  passwords?: string[]; // For fusionproxy bulk
   proxy_type: 'owlproxy' | 'fusionproxy';
-  passwords?: string[]; // For FusionProxy - must match accounts length
 };
 
 export async function adminBulkCreateProxy(payload: BulkCreateProxyPayload): Promise<BulkAdminProxyResult> {

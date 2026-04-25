@@ -148,42 +148,33 @@ export default function AdminProxyPanel() {
           return;
         }
 
-        let accountsList: string[] = [];
-        let passwordsList: string[] = [];
+        let emails: string[] = [];
+        let passwords: string[] | undefined;
 
         if (proxyType === 'fusionproxy') {
           // Parse email:password format
-          lines.forEach(line => {
-            const parts = line.split(':');
-            if (parts.length >= 2) {
-              const email = parts[0].trim();
-              const pass = parts.slice(1).join(':').trim(); // Handle passwords with colons
-              if (email) {
-                accountsList.push(email);
-                passwordsList.push(pass);
-              }
-            }
-          });
+          const parsed = lines.map(line => {
+            const [email, pwd] = line.split(':').map(s => s.trim());
+            return { email, pwd };
+          }).filter(p => p.email && p.pwd);
+          
+          emails = parsed.map(p => p.email);
+          passwords = parsed.map(p => p.pwd);
         } else {
           // OwlProxy: just emails
-          accountsList = lines;
+          emails = lines;
         }
 
-        if (!accountsList.length) {
+        if (!emails.length) {
           setCreating(false);
           return;
         }
 
-        // Build payload based on proxy type
-        const payload: any = {
-          accounts: accountsList,
+        const payload: BulkCreateProxyPayload = {
+          emails,
           proxy_type: proxyType,
+          ...(passwords ? { passwords } : {}),
         };
-        
-        if (proxyType === 'fusionproxy') {
-          payload.passwords = passwordsList;
-        }
-
         const res = await adminBulkCreateProxy(payload);
         
         const successIds = res.results.filter(r => r.success && r.id).map(r => r.id as string);
@@ -382,6 +373,25 @@ export default function AdminProxyPanel() {
               </button>
             </div>
 
+            {/* Password field - only for FusionProxy in SINGLE mode */}
+            {proxyType === 'fusionproxy' && !isBulkMode && (
+              <div>
+                <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="proxy-password">
+                  Password
+                </label>
+                <input
+                  id="proxy-password"
+                  type="password"
+                  autoComplete="off"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={creating}
+                  placeholder="Password for FusionProxy"
+                  className="min-h-touch w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
+                />
+              </div>
+            )}
+
             {/* Accounts/Email field */}
             <div>
               <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="admin-proxy-accounts">
@@ -416,29 +426,10 @@ export default function AdminProxyPanel() {
               )}
             </div>
 
-            {/* Password field - only for Single mode FusionProxy */}
-            {!isBulkMode && proxyType === 'fusionproxy' && (
-              <div>
-                <label className="mb-2 block text-left text-sm font-medium text-fg-muted" htmlFor="proxy-password">
-                  Password
-                </label>
-                <input
-                  id="proxy-password"
-                  type="password"
-                  autoComplete="off"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={creating}
-                  placeholder="Password for FusionProxy"
-                  className="min-h-touch w-full rounded-xl border border-glass-border bg-[var(--color-input-bg)] px-4 py-3 text-sm text-fg shadow-inner transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-60"
-                />
-              </div>
-            )}
-
             {/* Submit button */}
             <button 
               type="submit" 
-              disabled={creating || !accounts.trim() || (!isBulkMode && proxyType === 'fusionproxy' && !password.trim())} 
+              disabled={creating || !accounts.trim() || (proxyType === 'fusionproxy' && !password.trim())} 
               className={`${btnPrimary} w-full`}
             >
               {creating ? t(locale, 'dashboard.proxyAdmin.creating') : t(locale, 'dashboard.proxyAdmin.add')}

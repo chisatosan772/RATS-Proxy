@@ -149,10 +149,21 @@ export default function AdminProxyPanel() {
         }
 
         let emails: string[] = [];
+        let passwords: string[] = [];
 
         if (proxyType === 'fusionproxy') {
-          // For FusionProxy bulk: keep email:password format as-is
-          emails = lines.filter(line => line.includes(':') && line.split(':')[0].trim());
+          // Parse email:password format
+          lines.forEach(line => {
+            const parts = line.split(':');
+            if (parts.length >= 2) {
+              const email = parts[0].trim();
+              const pass = parts.slice(1).join(':').trim(); // Handle passwords with colons
+              if (email) {
+                emails.push(email);
+                passwords.push(pass);
+              }
+            }
+          });
         } else {
           // OwlProxy: just emails
           emails = lines;
@@ -163,11 +174,16 @@ export default function AdminProxyPanel() {
           return;
         }
 
-        const payload: BulkCreateProxyPayload = {
+        // For FusionProxy, need to send passwords array
+        const payload: any = {
           emails,
           proxy_type: proxyType,
-          ...(proxyType === 'fusionproxy' && password.trim() ? { password: password.trim() } : {}),
         };
+        
+        if (proxyType === 'fusionproxy') {
+          payload.passwords = passwords;
+        }
+
         const res = await adminBulkCreateProxy(payload);
         
         const successIds = res.results.filter(r => r.success && r.id).map(r => r.id as string);

@@ -449,7 +449,11 @@ export default function AdminProxyPanel() {
             {/* Submit button */}
             <button 
               type="submit" 
-              disabled={creating || !accounts.trim() || (proxyType === 'fusionproxy' && !password.trim())} 
+              disabled={
+                creating || 
+                !accounts.trim() || 
+                (proxyType === 'fusionproxy' && !isBulkMode && !password.trim())
+              } 
               className={`${btnPrimary} w-full`}
             >
               {creating ? t(locale, 'dashboard.proxyAdmin.creating') : t(locale, 'dashboard.proxyAdmin.add')}

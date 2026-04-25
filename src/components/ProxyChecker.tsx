@@ -52,7 +52,6 @@ export default function ProxyChecker({ uuid }: Props) {
   const [regionsError, setRegionsError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [proxyLine, setProxyLine] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [successPulse, setSuccessPulse] = useState(false);
 
   useLayoutEffect(() => {
@@ -153,6 +152,16 @@ export default function ProxyChecker({ uuid }: Props) {
         setErrorMsg(t(loc, 'proxy.error.network'));
       }
       setPhase('error');
+    }
+  };
+
+  const onCopy = async () => {
+    if (!proxyLine) return;
+    try {
+      await navigator.clipboard.writeText(proxyLine);
+      setTimeout(() => {}, 2000);
+    } catch {
+      /* ignore */
     }
   };
 
@@ -316,8 +325,7 @@ export default function ProxyChecker({ uuid }: Props) {
             const copyField = async (text: string) => {
               try {
                 await navigator.clipboard.writeText(text);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
+                setTimeout(() => {}, 2000);
               } catch {
                 /* ignore */
               }
